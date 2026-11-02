@@ -1,6 +1,9 @@
+
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { connection } from "next/server";
+import { Suspense } from "react";
+import Loading from "../../loading.js";
 import { auth } from "../../../../auth.js";
 import { prisma } from "../../../../lib/prisma.js";
 
@@ -16,7 +19,7 @@ function formatDuration(seconds) {
   return `${minutes} min ${remainingSeconds} sec`;
 }
 
-export default async function WorkoutDetailsPage({ params }) {
+async function WorkoutDetailsContent({ params }) {
   await connection();
 
   const session = await auth();
@@ -87,6 +90,18 @@ export default async function WorkoutDetailsPage({ params }) {
         <h1 className="mt-2 text-3xl font-bold">
           {workout.workoutName}
         </h1>
+
+        <div className="mt-3">
+          {workout.completedEarly ? (
+            <span className="inline-flex rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+              Completed early
+            </span>
+          ) : (
+            <span className="inline-flex rounded-full bg-muted px-3 py-1 text-sm font-medium text-muted-foreground">
+              Completed
+            </span>
+          )}
+        </div>
 
         <p className="mt-2 text-muted-foreground">
           {endTime
@@ -176,9 +191,9 @@ export default async function WorkoutDetailsPage({ params }) {
                             <span>{set.reps} reps</span>
                           )}
 
-                         {set.weight != null && (
-  <span>{set.weight.toString()} kg</span>
-)}
+                          {set.weight != null && (
+                            <span>{set.weight.toString()} kg</span>
+                          )}
 
                           {set.durationSeconds != null && (
                             <span>
@@ -187,8 +202,8 @@ export default async function WorkoutDetailsPage({ params }) {
                           )}
 
                           {set.distance != null && (
-  <span>{set.distance.toString()} distance</span>
-)}
+                            <span>{set.distance.toString()} distance</span>
+                          )}
                         </div>
                       </div>
                     ))}
@@ -215,5 +230,13 @@ export default async function WorkoutDetailsPage({ params }) {
         </div>
       )}
     </div>
+  );
+}
+
+export default function WorkoutDetailsPage({ params }) {
+  return (
+    <Suspense fallback={<Loading />}>
+      <WorkoutDetailsContent params={params} />
+    </Suspense>
   );
 }
